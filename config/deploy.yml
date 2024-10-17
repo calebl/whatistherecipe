@@ -2,12 +2,12 @@
 service: whatistherecipe
 
 # Name of the container image.
-image: your-user/whatistherecipe
+image: caleblenor/whatistherecipe
 
 # Deploy to these servers.
 servers:
   web:
-    - 192.168.0.1
+    - 5.161.113.179
   # job:
   #   hosts:
   #     - 192.168.0.1
@@ -17,13 +17,14 @@ servers:
 # Set ssl: false if using something like Cloudflare to terminate SSL (but keep host!).
 proxy:
   ssl: true
-  host: app.example.com
+  host: www.whatistherecipe.org
+  app_port: 3000
 
 # Credentials for your image host.
 registry:
   # Specify the registry server, if you're not using Docker Hub
   # server: registry.digitalocean.com / ghcr.io / ...
-  username: your-user
+  username: caleblenor
 
   # Always use an access token rather than real password when possible.
   password:

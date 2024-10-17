@@ -365,6 +365,7 @@ DEPENDENCIES
   brakeman
   capybara
   debug
+  dotenv
   importmap-rails
   jbuilder
   kamal (>= 2.0.0.rc2)
