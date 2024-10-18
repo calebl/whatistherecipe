@@ -1,19 +1,23 @@
-<h1>Recipe Text Extractor</h1>
-
-<%= form_with(url: root_path, method: :get, local: true) do |form| %>
-  <%= form.text_field :query, placeholder: "Enter URL to recipe" %>
-  <%= form.submit "Extract Text" %>
-<% end %>
-
-<% if @error.present? %>
-  <div class="error">
-    <p><%= @error %></p>
+<div>
+  <h1 class="text-4xl text-center mb-5">What is the Recipe?</h1>
+  <div class="text-center mb-5 text-gray-500">View only the recipe without all the noise</div>
+  <div class="text-center">
+    <% if @error.present? %>
+      <div class="error">
+        <p><%= @error %></p>
+      </div>
+    <% end %>
+    <%= form_with(url: root_path, method: :get, local: true) do |form| %>
+      <%= form.text_field :query, placeholder: "Link to a recipe", class: "w-3/4 mb-3 border-gray-400 rounded-sm" %>
+      <div>
+        <%= form.submit "Show me the recipe!", class: "btn btn-primary" %>
+      </div>
+    <% end %>
   </div>
-<% end %>
-
-<% if @result.present? %>
-  <div class="result">
-    <h2>Extracted Text:</h2>
-    <pre><%= @result %></pre>
-  </div>
-<% end %>
+  <% if @result.present? %>
+    <div class="result">
+      <h2>Extracted Text:</h2>
+      <pre><%= @result %></pre>
+    </div>
+  <% end %>
+</div>
