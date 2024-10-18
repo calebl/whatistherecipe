@@ -16,6 +16,9 @@ class SearchController < ApplicationController
         @error = "Invalid URL provided"
       end
     end
+
+    markdown = markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML, no_links: true)
+    @result = markdown.render(@result)
   end
 
   private
@@ -57,9 +60,16 @@ class SearchController < ApplicationController
   def retrieve_text_from_jina(url)
     Rails.logger.info("retrieving text from url")
     jina_url = "https://r.jina.ai/#{url}"
-    response = Net::HTTP.get_response(URI(jina_url))
+    uri = URI(jina_url)
+    request = Net::HTTP::Get.new(uri)
+    request["X-No-Cache"] = "true"
+
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
+      http.request(request)
+    end
 
     if response.is_a?(Net::HTTPSuccess)
+      Rails.logger.debug("retrieved text: #{response.body}")
       response.body
     else
       ""

@@ -3,7 +3,10 @@ module TextSummarizer
   include Groq::Helpers
 
   def summarize_text(text)
-    prompt = "Retrieve the recipe from this text:\n\n#{text}"
+    prompt = "Retrieve the recipe from this text. List the ingredients with their
+      measurements as a bulleted list. List the steps of the recipe as a numbered list.
+      Return the results formatted with markdown syntax.\n\n
+      Recipe text:\"\"\"#{text}\"\"\""
 
     client = Groq::Client.new
     response = client.chat([
