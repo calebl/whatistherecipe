@@ -18,7 +18,7 @@ class SearchController < ApplicationController
     end
 
     markdown = markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML, no_links: true)
-    @result = markdown.render(@result)
+    @result = markdown.render(@result) if @result
   end
 
   private
