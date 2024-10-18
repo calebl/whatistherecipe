@@ -2,7 +2,7 @@ require "uri"
 require "net/http"
 
 class SearchController < ApplicationController
-  include Groq::Helpers
+  include TextSummarizer
 
   before_action :rate_limit, only: [ :index ]
 
@@ -68,24 +68,5 @@ class SearchController < ApplicationController
     Rails.logger.error("Error fetching text from Jina: #{e.message}")
     @error = "There was a problem scraping the provided url. Could not retrieve text."
     ""
-  end
-
-  def summarize_text(text)
-    prompt = "Retrieve the recipe from the provided text:\n\n#{text}"
-
-    client = Groq::Client.new
-    response = client.chat([
-        S("You are a helpful assistant that can recognize and summarize recipes."),
-        U(prompt)
-      ]
-    )
-
-    Rails.logger.debug("LLM Response: #{response}")
-
-    response.choices[0].message.content
-  rescue StandardError => e
-    Rails.logger.error("Error summarizing text with Groq: #{e.message}")
-    @error = "Error: Unable to summarize the text. Providing raw text instead."
-    text
   end
 end
