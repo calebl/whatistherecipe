@@ -1,3 +1,19 @@
-<h1>Home</h1>
+<h1>Recipe Text Extractor</h1>
 
-<input name="query" placeholder="input url to recipe">
+<%= form_with(url: root_path, method: :get, local: true) do |form| %>
+  <%= form.text_field :query, placeholder: "Enter URL to recipe" %>
+  <%= form.submit "Extract Text" %>
+<% end %>
+
+<% if @error.present? %>
+  <div class="error">
+    <p><%= @error %></p>
+  </div>
+<% end %>
+
+<% if @result.present? %>
+  <div class="result">
+    <h2>Extracted Text:</h2>
+    <pre><%= @result %></pre>
+  </div>
+<% end %>
