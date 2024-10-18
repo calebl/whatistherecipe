@@ -7,6 +7,7 @@
         <p><%= @error %></p>
       </div>
     <% end %>
+    <!-- testing: https://theloopywhisk.com/2023/03/05/easy-gluten-free-naan-bread/ -->
     <%= form_with(url: root_path, method: :get, local: true) do |form| %>
       <%= form.text_field :query, placeholder: "Link to a recipe", class: "w-3/4 mb-3 border-gray-400 rounded-sm" %>
       <div>
