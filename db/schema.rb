@@ -14,7 +14,11 @@ ActiveRecord::Schema[8.0].define(version: 2024_10_19_102543) do
   create_table "scrapes", force: :cascade do |t|
     t.text "text"
     t.string "url"
+    t.string "hostname"
+    t.string "request_uri"
+    t.string "uri_hash"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["hostname", "request_uri"], name: "index_scrapes_on_hostname_and_request_uri", unique: true
   end
 end

@@ -62,6 +62,53 @@ class SearchController < ApplicationController
   def retrieve_text_from_jina(url, streaming: true)
     Rails.logger.info("retrieving text from url")
 
+    request = setup_webscraper_request(url, streaming)
+
+    uri = request.uri
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
+      http.request(request)
+    end
+
+    # accumulated_text = ""
+    # for streaming responses received a chunk at a time
+    # response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
+    #   http.request(request) do |response|
+    #     response.read_body do |chunk|
+    #       Rails.logger.debug("chunk: #{chunk}")
+    #       if chunk.start_with?("data: ")
+    #         event_data = chunk[6..-1] # remove "data: " prefix
+    #       else
+    #         event_data = chunk
+    #       end
+    #       accumulated_text += event_data
+    #     end
+    #   end
+    # end
+
+    if response.is_a?(Net::HTTPSuccess)
+      Rails.logger.debug("retrieved text: #{response.body}")
+      parsed_text = parse_jina_response(response)
+      scrape = Scrape.create(url: url, text: parsed_text, hostname: uri.hostname, request_uri: uri.request_uri, uri_hash: uri.hash)
+      if !scrape.persisted?
+        Rails.logger.warn("could not save the scrape, but will continue anyway...")
+      end
+
+      parsed_text
+    else
+      Rails.logger.debug("failed to retrieve text with response: #{response}")
+      ""
+    end
+  rescue JSON::ParserError => e
+    Rails.logger.error("Error parsing Jina response into JSON: #{e.message}")
+    @error = "There was a problem scraping the provided url. We retrieved the text but had an issue parsing it into a useable format."
+    ""
+  rescue StandardError => e
+    Rails.logger.error("Error fetching text from Jina: #{e.message}")
+    @error = "There was a problem scraping the provided url. Could not retrieve text."
+    ""
+  end
+
+  def setup_webscraper_request(url, streaming)
     jina_url = "https://r.jina.ai/#{url}"
     uri = URI(jina_url)
     request = Net::HTTP::Get.new(uri)
@@ -79,46 +126,13 @@ class SearchController < ApplicationController
       request["Accept"] = "text/event-stream"
     end
 
-    accumulated_text = ""
-    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
-      http.request(request)
-    end
+    request
+  end
 
-    # for streaming responses received a chunk at a time
-    # response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
-    #   http.request(request) do |response|
-    #     response.read_body do |chunk|
-    #       Rails.logger.debug("chunk: #{chunk}")
-    #       if chunk.start_with?("data: ")
-    #         event_data = chunk[6..-1] # remove "data: " prefix
-    #       else
-    #         event_data = chunk
-    #       end
-    #       accumulated_text += event_data
-    #     end
-    #   end
-    # end
-
+  def parse_jina_response(response)
     accumulated_text = response.body
-
-    if streaming
-      accumulated_text = accumulated_text.split("\n\n")
-    end
-
+    accumulated_text = accumulated_text.split("event: data\ndata: ").compact.last
     utf8_text = accumulated_text.force_encoding(Encoding::UTF_8)
-    # TODO: store URI().hash as a somewhat unique identifier. Or hostname and request_uri
-    # Scrape.create(url: url, text: utf8_text)
-
-    if response.is_a?(Net::HTTPSuccess)
-      Rails.logger.debug("retrieved text: #{accumulated_text}")
-      JSON.parse(utf8_text).fetch("text", accumulated_text)
-    else
-      Rails.logger.debug("failed to retrieve text with response: #{response}")
-      ""
-    end
-  rescue StandardError => e
-    Rails.logger.error("Error fetching text from Jina: #{e.message}")
-    @error = "There was a problem scraping the provided url. Could not retrieve text."
-    ""
+    JSON.parse(utf8_text).fetch("text", accumulated_text)
   end
 end
