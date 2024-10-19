@@ -26,11 +26,11 @@ class SearchController < ApplicationController
   private
 
   def fetch_and_summarize(url)
-      # Rails.cache.fetch(cache_key, expires_in: 1.day) do
-      @text = retrieve_text_from_jina(url)
-      @text # if @error
+    # Rails.cache.fetch(cache_key, expires_in: 1.day) do
+    @text = retrieve_text_from_jina(url)
+    @text  if @error
 
-    # summarize_text(@text)
+    summarize_text(@text)
     # end
   end
 
@@ -65,6 +65,13 @@ class SearchController < ApplicationController
     request = setup_webscraper_request(url, streaming)
 
     uri = request.uri
+
+    existing_scrape = Scrape.find_by(hostname: uri.hostname, request_uri: uri.request_uri)
+    if existing_scrape
+      Rails.logger.info("found existing scrape: #{existing_scrape.id}")
+      return existing_scrape.text
+    end
+
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
       http.request(request)
     end

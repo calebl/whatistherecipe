@@ -71,3 +71,18 @@ what I'm getting locally are also slightly different.
 I'm also going to start saving text scraper results in the database. Maybe
 I should do the same with LLM responses? Seems like a little early to
 make that optimization.
+
+-----
+
+I have it working more consistently now. With streaming from Jina, I'm saving
+the result to a scrapes table and then matching by hostname and request_uri on
+follow up requests so we don't have to re-scrape the same site over and over again.
+Results from the LLM are still a little inconsistent. I'm not sure how to improve these.
+I want to start storing them as related records to the scrape, storing:
+- generated text
+- model used
+- date & time
+- response time?
+- and maybe a rating?
+
+This way I can test across a few different models to see how they perform.

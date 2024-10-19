@@ -2,26 +2,32 @@
   <h1 class="text-4xl text-center mb-5">What is the Recipe?</h1>
   <div class="text-center mb-5 text-gray-500">View only the recipe without all the noise</div>
   <div class="text-center">
-    <% if @error.present? %>
-      <div class="error">
-        <p><%= @error %></p>
-      </div>
-    <% end %>
     <!-- testing: https://theloopywhisk.com/2023/03/05/easy-gluten-free-naan-bread/ -->
     <%= form_with(url: root_path, method: :get, local: true) do |form| %>
       <%= form.text_field :query, placeholder: "Link to a recipe", class: "w-3/4 mb-3 border-gray-400 rounded-sm" %>
       <div>
         <%= form.submit "Show me the recipe!", class: "btn btn-primary" %>
+        <%= link_to 'Try it', root_path(query: "https://theloopywhisk.com/2023/03/05/easy-gluten-free-naan-bread/"), class: "btn" %>
       </div>
     <% end %>
   </div>
+  <% if @error.present? %>
+    <div class="error">
+      <p><%= @error %></p>
+    </div>
+  <% end %>
   <% if @result.present? %>
     <div class="result">
       <h2>Simplified Recipe:</h2>
       <pre><%= raw @result %></pre>
     </div>
+    <div>
+      <% if @query.present? %>
+        Original: <%= link_to 'original recipe', @query %>
+      <% end %>
+    </div>
   <% end %>
-  <% if @text.present? %>
+  <% if @result.blank? && @text.present? %>
     <div>
       <strong>All Text from website</strong>
       <pre><%= raw @text.force_encoding(Encoding::UTF_8) %></pre>
