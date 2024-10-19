@@ -34,6 +34,10 @@ registry:
 env:
   secret:
     - RAILS_MASTER_KEY
+    - GROQ_API_KEY
+    - GROQ_MODEL_ID
+    - JINA_API_KEY
+    - LLM_SYSTEM_PROMPT
   clear:
     # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
     # When you start using multiple servers, you should split out job processing to a dedicated machine.
@@ -58,6 +62,7 @@ aliases:
   shell: app exec --interactive --reuse "bash"
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole"
+  env: app exec "env | sort"
 
 
 # Use a persistent storage volume for sqlite database files and local Active Storage files.
