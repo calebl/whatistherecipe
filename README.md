@@ -52,3 +52,13 @@ Provide instructions for deploying the application.
 ## Additional Information
 
 Add any additional information that might be helpful for users or developers working with this project.
+
+## Dev Log
+** Friday Oct 18, 2024 **
+I've got everything wired together but results are not consistent. Sometimes the LLM makes
+stuff up about putting it into the oven. I've been testing with this link: [gluten free naan](https://theloopywhisk.com/2023/03/05/easy-gluten-free-naan-bread/#wprm-recipe-container-15391)
+
+Sometimes it comes back intelligable but often it does not. I can't tell why yet. It seems like the scraper results are not consistent. Is that why?
+
+** Saturday Oct 19, 2024 **
+Tried switching to the text/event-stream option provided by Jina. This seems more consistent but it's harder to parse the response. Does it use more tokens from Jina as well? Results between their website version and what I'm getting locally are also slightly different.

@@ -28,9 +28,9 @@ class SearchController < ApplicationController
   def fetch_and_summarize(url)
       # Rails.cache.fetch(cache_key, expires_in: 1.day) do
       @text = retrieve_text_from_jina(url)
-      return @text if @error
+      @text # if @error
 
-      summarize_text(@text)
+    # summarize_text(@text)
     # end
   end
 
@@ -59,7 +59,7 @@ class SearchController < ApplicationController
     false
   end
 
-  def retrieve_text_from_jina(url)
+  def retrieve_text_from_jina(url, streaming: true)
     Rails.logger.info("retrieving text from url")
 
     jina_url = "https://r.jina.ai/#{url}"
@@ -67,19 +67,53 @@ class SearchController < ApplicationController
     request = Net::HTTP::Get.new(uri)
 
     # set headers
+    if ENV.fetch("JINA_API_KEY").present?
+      request["Authorization"] = "Bearer #{ENV.fetch("JINA_API_KEY", "")}"
+    end
     request["X-No-Cache"] = "true"
     request["X-With-Images-Summary"] = "false"
     request["X-With-Links-Summary"] = "false"
     request["X-Return-Format"] = "text"
 
+    if streaming
+      request["Accept"] = "text/event-stream"
+    end
+
+    accumulated_text = ""
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
       http.request(request)
     end
 
+    # for streaming responses received a chunk at a time
+    # response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
+    #   http.request(request) do |response|
+    #     response.read_body do |chunk|
+    #       Rails.logger.debug("chunk: #{chunk}")
+    #       if chunk.start_with?("data: ")
+    #         event_data = chunk[6..-1] # remove "data: " prefix
+    #       else
+    #         event_data = chunk
+    #       end
+    #       accumulated_text += event_data
+    #     end
+    #   end
+    # end
+
+    accumulated_text = response.body
+
+    if streaming
+      accumulated_text = accumulated_text.split("\n\n")
+    end
+
+    utf8_text = accumulated_text.force_encoding(Encoding::UTF_8)
+    # TODO: store URI().hash as a somewhat unique identifier. Or hostname and request_uri
+    # Scrape.create(url: url, text: utf8_text)
+
     if response.is_a?(Net::HTTPSuccess)
-      Rails.logger.debug("retrieved text: #{response.body}")
-      response.body
+      Rails.logger.debug("retrieved text: #{accumulated_text}")
+      JSON.parse(utf8_text).fetch("text", accumulated_text)
     else
+      Rails.logger.debug("failed to retrieve text with response: #{response}")
       ""
     end
   rescue StandardError => e
