@@ -17,8 +17,14 @@
   </div>
   <% if @result.present? %>
     <div class="result">
-      <h2>Extracted Recipe:</h2>
+      <h2>Simplified Recipe:</h2>
       <pre><%= raw @result %></pre>
+    </div>
+  <% end %>
+  <% if @text.present? %>
+    <div>
+      <h2>All Text from website</h2>
+      <pre><%= raw @text.force_encoding(Encoding::UTF_8) %></pre>
     </div>
   <% end %>
 </div>

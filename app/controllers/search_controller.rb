@@ -7,9 +7,9 @@ class SearchController < ApplicationController
   before_action :rate_limit, only: [ :index ]
 
   def index
-    @query = params[:query]
+    @query = params[:query]&.squish
     if @query.present?
-      if valid_url?(@query.squish)
+      if valid_url?(@query)
         @result = fetch_and_summarize(@query)
         break_cache_on_error
       else
@@ -19,17 +19,19 @@ class SearchController < ApplicationController
 
     markdown = markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML, no_links: true)
     @result = markdown.render(@result) if @result
+
+    @text = markdown.render(@text) if @text
   end
 
   private
 
   def fetch_and_summarize(url)
-    Rails.cache.fetch(cache_key, expires_in: 1.day) do
-      text = retrieve_text_from_jina(url)
-      return text if @error
+      # Rails.cache.fetch(cache_key, expires_in: 1.day) do
+      @text = retrieve_text_from_jina(url)
+      return @text if @error
 
-      summarize_text(text)
-    end
+      summarize_text(@text)
+    # end
   end
 
   def cache_key
@@ -59,10 +61,16 @@ class SearchController < ApplicationController
 
   def retrieve_text_from_jina(url)
     Rails.logger.info("retrieving text from url")
+
     jina_url = "https://r.jina.ai/#{url}"
     uri = URI(jina_url)
     request = Net::HTTP::Get.new(uri)
+
+    # set headers
     request["X-No-Cache"] = "true"
+    request["X-With-Images-Summary"] = "false"
+    request["X-With-Links-Summary"] = "false"
+    request["X-Return-Format"] = "text"
 
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
       http.request(request)
