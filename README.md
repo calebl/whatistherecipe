@@ -86,3 +86,25 @@ I want to start storing them as related records to the scrape, storing:
 - and maybe a rating?
 
 This way I can test across a few different models to see how they perform.
+
+---
+
+It's not working with deploys. My environment variables weren't loading into kamal secrets
+correctly because dotenv wasn't loading them into the environment that kamal was using.
+It's a bit confusing to me but I changed it so they get pulled from 1password directly now
+which is pretty cool. Formatting is still wierd on the returned results but it works
+on the live site now at www.whatistherecipe.org.
+
+This one crashes the site reader: https://smittenkitchen.com/2012/10/chicken-noodle-soup/.
+I think because of all the comments. How would I filter that content out?
+
+To try:
+- if it fails on the first attempt with 10 second timeout, try again by targetting only the 'article' selector
+- or start with the article selector only?
+- Try a different webscraper. The website doesn't actually take that long to load. It shouldn't take 15 seconds
+or more to retrieve the text of the site. Can I try to do it myself? Or is there another ruby gem available?
+
+** Sunday Oct 20, 2024 **
+created a rake task for web scraping using selenium to avoid jina issues. Needs to be moved
+to a background job that can be executed on request. From there, need to use turbo streams or
+websockets for display updates

@@ -61,14 +61,10 @@ end
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
-  gem "selenium-webdriver"
 end
 
+gem "selenium-webdriver"
 gem "tailwindcss-rails", "~> 3.0"
-
 gem "foreman", "~> 0.88.1"
-
 gem "groq", "~> 0.3.2"
-
-# Add redcarpet for markdown rendering
 gem "redcarpet", "~> 3.6"
