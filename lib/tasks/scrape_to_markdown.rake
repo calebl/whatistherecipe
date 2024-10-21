@@ -38,7 +38,7 @@ namespace :scrape do
       # Apply basic markdown formatting
       markdown = "# #{url}\n\n#{plain_text}"
 
-      output_file = "scrape_output_#{Time.now.to_i}.md"
+      output_file = "tmp/scrape_output_#{Time.now.to_i}.md"
       File.write(output_file, markdown)
 
       puts "Scrape completed. Output saved to #{output_file}"
