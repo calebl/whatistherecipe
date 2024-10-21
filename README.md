@@ -107,4 +107,8 @@ or more to retrieve the text of the site. Can I try to do it myself? Or is there
 ** Sunday Oct 20, 2024 **
 created a rake task for web scraping using selenium to avoid jina issues. Needs to be moved
 to a background job that can be executed on request. From there, need to use turbo streams or
-websockets for display updates
+websockets for display updates. Decided on using selenium for now because setting up playwright
+requires adding it as a node package to the project which I'd rather avoid for now.
+
+Other ideas:
+- run the prompt through multiple models and then have some mechanism for selecting the best result.
