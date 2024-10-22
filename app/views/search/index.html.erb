@@ -30,7 +30,7 @@
   <% if @result.blank? && @text.present? %>
     <div>
       <strong>All Text from website</strong>
-      <pre><%= raw @text.force_encoding(Encoding::UTF_8) %></pre>
+      <pre class="prose"><%= raw @text.force_encoding(Encoding::UTF_8) %></pre>
     </div>
   <% end %>
 </div>

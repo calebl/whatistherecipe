@@ -26,17 +26,26 @@ class SearchController < ApplicationController
   private
 
   def fetch_and_summarize(url)
-    scrape = WebScraperService.new(url).scrape_to_markdown(save_to_db: true)
-    @text = scrape.text
-    summary = summarize_text(@text)
+    scrape = WebScraperService.new(url).scrape
+    scrape.save if !scrape.persisted?
 
-    # Save the LLM response
-    if scrape.persisted?
-      LlmResponse.create(
-        content: summary,
-        scrape: scrape,
-        model: ENV.fetch("GROQ_MODEL_ID")
-      )
+    @text = scrape.text
+
+    # if scrape has llm response with the current model, use it
+    llm_response = scrape.llm_responses.find_by(model: ENV.fetch("GROQ_MODEL_ID"))
+    if llm_response
+      summary = llm_response.content
+    else
+      summary = summarize_text(@text)
+
+      # Save the LLM response
+      if scrape.persisted?
+        LlmResponse.create(
+          content: summary,
+          scrape: scrape,
+          model: ENV.fetch("GROQ_MODEL_ID")
+        )
+      end
     end
 
     summary

@@ -1,13 +1,13 @@
 namespace :scrape do
   desc "Visit a URL, capture all text, and convert to markdown"
-  task :to_markdown, [ :url ] => :environment do |t, args|
+  task :to_text, [ :url ] => :environment do |t, args|
     url = args[:url]
     scraper = WebScraperService.new(url)
-    scrape_result = scraper.scrape_to_markdown(save_to_db: false)
+    scrape_result = scraper.scrape(skip_existing: true)
 
     markdown = scrape_result.text
 
-    output_file = "tmp/scrape_output_#{Time.now.to_i}.md"
+    output_file = "tmp/scrape_output_#{Time.now.to_i}.txt"
     File.write(output_file, markdown)
 
     if output_file

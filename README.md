@@ -133,3 +133,13 @@ These changes should improve the consistency of scraping results and provide bet
 - Implementing background jobs for scraping to improve response times.
 - Adding more robust error handling and retry mechanisms.
 - Exploring ways to filter out irrelevant content (like comments) from scraped pages.
+
+4. Updated `WebScraperService`:
+   - Implemented print media emulation for Selenium WebDriver.
+   - Added `driver.execute_cdp("Emulation.setEmulatedMedia", { 'media': "print" })` to set the emulated media type to 'print' before navigating to the URL.
+   - This change may help in capturing print-specific layouts or styles, potentially improving the quality of scraped content for recipe websites that have print-friendly versions. Should cut down on reviews getting scraped and improve the quality of the results.
+
+Next steps:
+- Test the impact of print media emulation on various recipe websites.
+- Consider implementing a toggle or option to switch between normal and print media emulation based on the website being scraped.
+- Monitor and compare the quality of scraped content with and without print media emulation to determine its effectiveness.
