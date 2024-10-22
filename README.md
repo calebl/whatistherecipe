@@ -112,3 +112,24 @@ requires adding it as a node package to the project which I'd rather avoid for n
 
 Other ideas:
 - run the prompt through multiple models and then have some mechanism for selecting the best result.
+
+** Monday Oct 21, 2024 **
+Made significant changes to improve the web scraping and data handling process:
+
+1. Updated `WebScraperService`:
+   - Modified `scrape_to_markdown` method to return a Scrape object instead of just the text.
+   - This change allows for better data management and easier access to all scrape attributes.
+
+2. Updated rake task in `lib/tasks/scrape_to_markdown.rake`:
+   - Modified to handle the new Scrape object returned by `scrape_to_markdown`.
+   - Now extracts the text from the Scrape object for output.
+
+3. Updated `SearchController`:
+   - Modified `fetch_and_summarize` method to work with the new Scrape object.
+   - Improved error handling and data flow.
+   - Now creates LlmResponse records only for persisted Scrape objects.
+
+These changes should improve the consistency of scraping results and provide better data management for both scrapes and LLM responses. The next steps could include:
+- Implementing background jobs for scraping to improve response times.
+- Adding more robust error handling and retry mechanisms.
+- Exploring ways to filter out irrelevant content (like comments) from scraped pages.

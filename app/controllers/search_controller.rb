@@ -17,7 +17,7 @@ class SearchController < ApplicationController
       end
     end
 
-    markdown = markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML, no_links: true)
+    markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML, no_links: true)
     @result = markdown.render(@result) if @result
 
     @text = markdown.render(@text) if @text
@@ -26,12 +26,24 @@ class SearchController < ApplicationController
   private
 
   def fetch_and_summarize(url)
-    # Rails.cache.fetch(cache_key, expires_in: 1.day) do
-    @text = retrieve_text_from_jina(url)
-    @text  if @error
+    scrape = WebScraperService.new(url).scrape_to_markdown(save_to_db: true)
+    @text = scrape.text
+    summary = summarize_text(@text)
 
-    summarize_text(@text)
-    # end
+    # Save the LLM response
+    if scrape.persisted?
+      LlmResponse.create(
+        content: summary,
+        scrape: scrape,
+        model: ENV.fetch("GROQ_MODEL_ID")
+      )
+    end
+
+    summary
+  rescue => e
+    Rails.logger.error("Error fetching and summarizing text: #{e.message}")
+    @error = "There was a problem scraping the provided url. Could not retrieve text."
+    ""
   end
 
   def cache_key
@@ -57,89 +69,5 @@ class SearchController < ApplicationController
     uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
   rescue URI::InvalidURIError
     false
-  end
-
-  def retrieve_text_from_jina(url, streaming: true)
-    Rails.logger.info("retrieving text from url")
-
-    request = setup_webscraper_request(url, streaming)
-
-    uri = request.uri
-
-    existing_scrape = Scrape.find_by(hostname: uri.hostname, request_uri: uri.request_uri)
-    if existing_scrape
-      Rails.logger.info("found existing scrape: #{existing_scrape.id}")
-      return existing_scrape.text
-    end
-
-    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
-      http.request(request)
-    end
-
-    # accumulated_text = ""
-    # for streaming responses received a chunk at a time
-    # response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
-    #   http.request(request) do |response|
-    #     response.read_body do |chunk|
-    #       Rails.logger.debug("chunk: #{chunk}")
-    #       if chunk.start_with?("data: ")
-    #         event_data = chunk[6..-1] # remove "data: " prefix
-    #       else
-    #         event_data = chunk
-    #       end
-    #       accumulated_text += event_data
-    #     end
-    #   end
-    # end
-
-    if response.is_a?(Net::HTTPSuccess)
-      Rails.logger.debug("retrieved text: #{response.body}")
-      parsed_text = parse_jina_response(response)
-      scrape = Scrape.create(url: url, text: parsed_text, hostname: uri.hostname, request_uri: uri.request_uri, uri_hash: uri.hash)
-      if !scrape.persisted?
-        Rails.logger.warn("could not save the scrape, but will continue anyway...")
-      end
-
-      parsed_text
-    else
-      Rails.logger.debug("failed to retrieve text with response: #{response}")
-      ""
-    end
-  rescue JSON::ParserError => e
-    Rails.logger.error("Error parsing Jina response into JSON: #{e.message}")
-    @error = "There was a problem scraping the provided url. We retrieved the text but had an issue parsing it into a useable format."
-    ""
-  rescue StandardError => e
-    Rails.logger.error("Error fetching text from Jina: #{e.message}")
-    @error = "There was a problem scraping the provided url. Could not retrieve text."
-    ""
-  end
-
-  def setup_webscraper_request(url, streaming)
-    jina_url = "https://r.jina.ai/#{url}"
-    uri = URI(jina_url)
-    request = Net::HTTP::Get.new(uri)
-
-    # set headers
-    if ENV.fetch("JINA_API_KEY").present?
-      request["Authorization"] = "Bearer #{ENV.fetch("JINA_API_KEY", "")}"
-    end
-    request["X-No-Cache"] = "true"
-    request["X-With-Images-Summary"] = "false"
-    request["X-With-Links-Summary"] = "false"
-    request["X-Return-Format"] = "text"
-
-    if streaming
-      request["Accept"] = "text/event-stream"
-    end
-
-    request
-  end
-
-  def parse_jina_response(response)
-    accumulated_text = response.body
-    accumulated_text = accumulated_text.split("event: data\ndata: ").compact.last
-    utf8_text = accumulated_text.force_encoding(Encoding::UTF_8)
-    JSON.parse(utf8_text).fetch("text", accumulated_text)
   end
 end

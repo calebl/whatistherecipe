@@ -10,7 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_10_19_102543) do
+ActiveRecord::Schema[8.0].define(version: 2024_10_22_102305) do
+  create_table "llm_responses", force: :cascade do |t|
+    t.text "content"
+    t.integer "scrape_id", null: false
+    t.string "model"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["scrape_id"], name: "index_llm_responses_on_scrape_id"
+  end
+
   create_table "scrapes", force: :cascade do |t|
     t.text "text"
     t.string "url"
@@ -21,4 +30,6 @@ ActiveRecord::Schema[8.0].define(version: 2024_10_19_102543) do
     t.datetime "updated_at", null: false
     t.index ["hostname", "request_uri"], name: "index_scrapes_on_hostname_and_request_uri", unique: true
   end
+
+  add_foreign_key "llm_responses", "scrapes"
 end
